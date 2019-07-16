@@ -58,11 +58,10 @@
     // sectionheader停留解决
     CGFloat insetT = - self.scrollView.mj_offsetY > _scrollViewOriginalInset.top ? - self.scrollView.mj_offsetY : _scrollViewOriginalInset.top;
     insetT = insetT > self.mj_h + _scrollViewOriginalInset.top ? self.mj_h + _scrollViewOriginalInset.top : insetT;
-    if(self.scrollView.mj_insetT != insetT) {
+    if(fabs(self.scrollView.mj_insetT - insetT) >= 1) {
         self.scrollView.mj_insetT = insetT;
         self.insetTDelta = _scrollViewOriginalInset.top - insetT;
     }
-    
 }
 
 
