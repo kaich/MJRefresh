@@ -11,6 +11,7 @@
 
 @interface MJRefreshHeader()
 @property (assign, nonatomic) CGFloat insetTDelta;
+@property (assign, nonatomic) CGFloat originalAdjustHeight;
 @end
 
 @implementation MJRefreshHeader
@@ -58,10 +59,9 @@
     // sectionheader停留解决
     CGFloat insetT = - self.scrollView.mj_offsetY > _scrollViewOriginalInset.top ? - self.scrollView.mj_offsetY : _scrollViewOriginalInset.top;
     insetT = insetT > self.mj_h + _scrollViewOriginalInset.top ? self.mj_h + _scrollViewOriginalInset.top : insetT;
-    if(fabs(self.scrollView.mj_insetT - insetT) >= 1) {
-        self.scrollView.mj_insetT = insetT;
-        self.insetTDelta = _scrollViewOriginalInset.top - insetT;
-    }
+    insetT = floor(insetT);
+    self.scrollView.mj_insetT = insetT;
+    self.insetTDelta = _scrollViewOriginalInset.top - insetT;
 }
 
 
@@ -122,7 +122,11 @@
         
         // 恢复inset和offset
         [UIView animateWithDuration:MJRefreshSlowAnimationDuration animations:^{
-            self.scrollView.mj_insetT += self.insetTDelta;
+            if (@available(iOS 11.0, *)) {
+                self.scrollView.mj_insetT += self.insetTDelta + (self.scrollView.adjustedContentInset.top - self.scrollView.contentInset.top - self.originalAdjustHeight);
+            } else {
+                self.scrollView.mj_insetT += self.insetTDelta;
+            }
             
             if (self.endRefreshingAnimateCompletionBlock) {
                 self.endRefreshingAnimateCompletionBlock();
@@ -137,6 +141,9 @@
             }
         }];
     } else if (state == MJRefreshStateRefreshing) {
+        if (@available(iOS 11.0, *)) {
+            self.originalAdjustHeight = self.scrollView.adjustedContentInset.top - self.scrollView.contentInset.top;
+        }
         MJRefreshDispatchAsyncOnMainQueue({
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                 if (self.scrollView.panGestureRecognizer.state != UIGestureRecognizerStateCancelled) {
